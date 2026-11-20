@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import Http404, HttpResponse, JsonResponse
 from django.core.serializers.json import DjangoJSONEncoder
 from django.shortcuts import redirect, render
+from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.decorators.http import require_POST
 
 from . import analytics
@@ -96,6 +97,7 @@ def doctor_record(request):
     return redirect("dashboard")
 
 
+@xframe_options_sameorigin  # the /demo/ page embeds the simulator in a same-origin iframe
 def simulator(request):
     path = Path(settings.BASE_DIR).parent / "hardware" / "simulator" / "index.html"
     if not path.exists():

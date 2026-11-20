@@ -180,3 +180,8 @@ class DemoPageTests(SeededCase):
         self.assertEqual(data["control"]["recent"][0]["student"], "Ahmed Mohamed")
         sheet = data["students"][0]["sheet"]
         self.assertEqual(sheet[0]["status"], "PRESENT")
+
+    def test_simulator_frameable_same_origin(self):
+        r = self.client.get("/simulator/")
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.headers.get("X-Frame-Options"), "SAMEORIGIN")
