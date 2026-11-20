@@ -1,0 +1,16 @@
+{% extends "core/base.html" %}{% block body %}
+<h2>Doctor Portal <small style="color:var(--mut)">{{ doctor.full_name }}</small></h2>
+<div class="card"><h3>Record grade / behavior / bonus</h3>
+<form class="inline" method="post" action="/dashboard/record/">{% csrf_token %}
+<select name="enrollment">{% for e in enrollments %}<option value="{{ e.id }}">{{ e.student.full_name }} - {{ e.course.course_code }}</option>{% endfor %}</select>
+<select name="kind"><option value="behavior">Behavior points (+/-)</option><option value="bonus">Bonus score</option><option value="grade">Grade</option></select>
+<select name="grade_type">{% for v,l in grade_types %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select>
+<input name="value" type="number" step="0.5" placeholder="value" required style="width:90px">
+<input name="max_score" type="number" placeholder="max (grades)" style="width:110px">
+<input name="note" placeholder="note / reason">
+<button>Save</button></form>
+<p style="color:var(--mut);font-size:13px">Grade type and max only matter when "Grade" is selected.</p></div>
+{% for r in reports %}<div class="card"><h3>{{ r.course_code }} {{ r.course }} <small style="color:var(--mut)">avg attendance {{ r.average_attendance }}%</small></h3>
+<table><tr><th>Student</th><th>Attendance</th><th>Grades</th><th>Behavior</th><th>KPI</th><th></th></tr>
+{% for s in r.students %}<tr><td>{{ s.student }}</td><td>{{ s.attendance }}%</td><td>{{ s.grades }}%</td><td>{{ s.behavior }}</td><td>{{ s.kpi }}</td><td><span class="pill {{ s.risk }}">{{ s.risk }}</span></td></tr>{% endfor %}</table></div>{% endfor %}
+{% endblock %}

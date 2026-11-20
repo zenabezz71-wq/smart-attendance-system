@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:16
+    environment: {POSTGRES_DB: attendance, POSTGRES_USER: attendance, POSTGRES_PASSWORD: attendance}
+    volumes: [pgdata:/var/lib/postgresql/data]
+  web:
+    image: python:3.12-slim
+    working_dir: /app/software
+    volumes: ["./:/app"]
+    environment:
+      DATABASE_URL: postgres://attendance:attendance@db:5432/attendance
+    command: sh -c "pip install -q -r requirements.txt && python manage.py migrate && python manage.py seed_demo && python manage.py runserver 0.0.0.0:8000"
+    ports: ["8000:8000"]
+    depends_on: [db]
+volumes: {pgdata: {}}

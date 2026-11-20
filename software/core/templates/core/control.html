@@ -1,0 +1,18 @@
+{% extends "core/base.html" %}{% block body %}
+<h2>Control Dashboard <small style="color:var(--mut)">{{ role }}</small></h2>
+<div class="grid">
+<div class="card"><h3>Students</h3><div class="big">{{ students }}</div></div>
+<div class="card"><h3>Scans today</h3><div class="big">{{ today_scans }}</div></div>
+<div class="card"><h3>Today attendance rate</h3><div class="big">{{ today_attendance_rate }}%</div></div>
+</div>
+<div class="card"><h3>Devices</h3><table><tr><th>Device</th><th>Room</th><th>Connection</th><th>Last seen</th></tr>
+{% for d in devices %}<tr><td>{{ d.device }}</td><td>{{ d.room }}</td><td><span class="pill {% if d.online %}on{% else %}off{% endif %}">{% if d.online %}ONLINE{% else %}OFFLINE{% endif %}</span></td><td>{{ d.last_seen|default:"never" }}</td></tr>{% endfor %}</table></div>
+<div class="card"><h3>Live scans (latest 10)</h3><table><tr><th>Student</th><th>Course</th><th>Status</th><th>Time</th></tr>
+{% for r in recent %}<tr><td>{{ r.student }}</td><td>{{ r.course }}</td><td><span class="pill {{ r.status }}">{{ r.status }}</span></td><td>{{ r.time }}</td></tr>{% empty %}<tr><td colspan=4>No scans yet. Use the <a style="color:var(--acc)" href="/simulator/">device simulator</a>.</td></tr>{% endfor %}</table></div>
+<div class="card"><h3>Early warning: students at risk</h3><table><tr><th>Student</th><th>Attendance</th><th>Grades</th><th>Behavior</th><th>KPI</th><th></th></tr>
+{% for s in at_risk %}<tr><td>{{ s.student }}</td><td>{{ s.attendance }}%</td><td>{{ s.grades }}%</td><td>{{ s.behavior }}</td><td>{{ s.kpi }}</td><td><span class="pill {{ s.risk }}">{{ s.risk }}</span></td></tr>{% empty %}<tr><td colspan=6>Nobody at risk.</td></tr>{% endfor %}</table></div>
+{% for c in courses %}<div class="card"><h3>{{ c.course_code }} {{ c.course }} <small style="color:var(--mut)">avg attendance {{ c.average_attendance }}%</small></h3>
+<table><tr><th>Student</th><th>Attendance</th><th>Grades</th><th>Behavior</th><th>KPI</th><th></th></tr>
+{% for s in c.students %}<tr><td>{{ s.student }}</td><td>{{ s.attendance }}%</td><td>{{ s.grades }}%</td><td>{{ s.behavior }}</td><td>{{ s.kpi }}</td><td><span class="pill {{ s.risk }}">{{ s.risk }}</span></td></tr>{% endfor %}</table></div>{% endfor %}
+{% if audit %}<div class="card"><h3>Audit log</h3><table>{% for a in audit %}<tr><td>{{ a.timestamp }}</td><td>{{ a.user|default:"device" }}</td><td>{{ a.action }}</td><td>{{ a.details }}</td></tr>{% endfor %}</table></div>{% endif %}
+{% endblock %}

@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ESP32 Attendance Reader - Simulator</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0b1220;color:#e2e8f0;font-family:system-ui,Segoe UI,Arial;display:flex;flex-wrap:wrap;gap:24px;justify-content:center;padding:24px}
+.board{width:460px;background:linear-gradient(160deg,#064e3b,#022c22);border:3px solid #10b981;border-radius:18px;padding:18px;position:relative;box-shadow:0 20px 60px #000a}
+.board h2{margin:0 0 4px;font-size:14px;letter-spacing:2px;color:#6ee7b7}.sub{font-size:11px;color:#a7f3d0;margin-bottom:12px}
+.chip{background:#111;border:2px solid #444;border-radius:6px;padding:6px 10px;display:inline-block;font:11px monospace;color:#9ca3af}
+.lcd{background:#7fa31f;border:6px solid #1f2937;border-radius:8px;padding:12px 14px;margin:12px 0;box-shadow:inset 0 0 18px #3f5a0a}
+.lcd div{font:700 24px/30px "Courier New",monospace;color:#1a2e05;letter-spacing:3px;white-space:pre;height:30px;overflow:hidden}
+.row{display:flex;gap:18px;align-items:center;margin:10px 0}
+.led{width:26px;height:26px;border-radius:50%;border:2px solid #0006;transition:.1s}
+.led.g{background:#14532d}.led.g.on{background:#22c55e;box-shadow:0 0 22px 8px #22c55e}
+.led.r{background:#7f1d1d}.led.r.on{background:#ef4444;box-shadow:0 0 22px 8px #ef4444}
+.buz{width:34px;height:34px;border-radius:50%;background:#111;border:3px solid #555;display:flex;align-items:center;justify-content:center;font-size:15px}
+.buz.on{background:#f59e0b;border-color:#fbbf24;animation:sh .08s infinite}@keyframes sh{50%{transform:translateX(2px)}}
+label{font-size:11px;color:#a7f3d0;display:block}
+.pin{font:10px monospace;color:#6ee7b7;margin-top:10px;line-height:1.5}
+.side{width:420px}.card{background:#1e293b;border-radius:14px;padding:16px;margin-bottom:14px}
+.card h3{margin:0 0 10px;font-size:15px;color:#38bdf8}input{width:100%;padding:8px;border-radius:8px;border:1px solid #475569;background:#0f172a;color:#e2e8f0;margin-bottom:8px;font-family:monospace}
+button{padding:9px 14px;border-radius:9px;border:0;background:#38bdf8;color:#04202e;font-weight:700;cursor:pointer}
+button.card-btn{background:#0f172a;color:#e2e8f0;border:1px solid #475569;margin:3px;font-size:12px}button.card-btn:hover{border-color:#38bdf8}
+#tap{width:100%;font-size:16px;padding:14px;background:#22c55e}
+#log{font:12px monospace;max-height:230px;overflow:auto;white-space:pre-wrap}.ok{color:#86efac}.bad{color:#fca5a5}
+small{color:#94a3b8}a{color:#38bdf8}
+</style></head><body>
+<div class="board">
+  <h2>SMART ATTENDANCE READER</h2><div class="sub">ESP32 DevKit V1 + RC522 + LCD 16x2 I2C (virtual maquette)</div>
+  <span class="chip">ESP32 DevKit V1</span> <span class="chip">RC522 13.56MHz</span>
+  <div class="lcd"><div id="l1"></div><div id="l2"></div></div>
+  <div class="row"><div><label>GREEN (GPIO25)</label><div class="led g" id="lg"></div></div>
+  <div><label>RED (GPIO26)</label><div class="led r" id="lr"></div></div>
+  <div><label>BUZZER (GPIO27)</label><div class="buz" id="bz">&#9835;</div></div></div>
+  <div class="pin">RC522: SCK 18 | MISO 19 | MOSI 23 | SDA 5<br>LCD: SDA 21 | SCL 22<br>Firmware behavior mirrored: 3s same-card cooldown, X-Device-Key header, UTC timestamp.</div>
+</div>
+<div class="side">
+  <div class="card"><h3>Tap a card</h3>
+    <label>Card UID (hex)</label><input id="uid" value="A1B2C3D4">
+    <div id="presets"></div><br>
+    <button id="tap">TAP CARD ON READER</button>
+    <p><small>Demo cards (from the seed data). Any other UID shows "Unknown card".</small></p></div>
+  <div class="card"><h3>Device settings</h3>
+    <label>Backend URL</label><input id="api">
+    <label>Device ID</label><input id="dev" value="DEV_R101">
+    <label>Device API key</label><input id="key" value="DEV_R101_SECRET">
+    <button id="save">Save</button> <small id="net"></small></div>
+  <div class="card"><h3>Request / response log</h3><div id="log"></div></div>
+  <small>Same request the real ESP32 sends. Open the <a id="dash" href="/dashboard/">dashboard</a> to see the scan appear.</small>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const CARDS=[["Ahmed","A1B2C3D4"],["Sara","B2C3D4E5"],["Omar","C3D4E5F6"],["Mariam","D4E5F6A7"],["Youssef","E5F6A7B8"],["Nour","F6A7B8C9"],["Unknown","00000000"]];
+const params=new URLSearchParams(location.search);
+const sameOrigin=location.pathname.startsWith("/simulator");
+$("api").value=params.get("api")||localStorage.simApi||(sameOrigin?location.origin:"");
+if(params.get("key"))$("key").value=params.get("key");
+$("save").onclick=()=>{localStorage.simApi=$("api").value.trim();$("dash").href=$("api").value.trim().replace(/\/$/,"")+"/dashboard/";$("net").textContent="saved"};
+$("dash").href=($("api").value||"").replace(/\/$/,"")+"/dashboard/";
+CARDS.forEach(([n,u])=>{const b=document.createElement("button");b.className="card-btn";b.textContent=n+" "+u;b.onclick=()=>{$("uid").value=u};$("presets").appendChild(b)});
+
+const pad=s=>(s+"                ").slice(0,16);
+function lcd(a,b=""){$("l1").textContent=pad(a);$("l2").textContent=pad(b)}
+let ac;function beep(ms){$("bz").classList.add("on");try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();const o=ac.createOscillator(),g=ac.createGain();o.frequency.value=2700;o.type="square";g.gain.value=.05;o.connect(g);g.connect(ac.destination);o.start();setTimeout(()=>o.stop(),ms)}catch(e){}return new Promise(r=>setTimeout(()=>{$("bz").classList.remove("on");r()},ms))}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function good(){$("lg").classList.add("on");await beep(150);await sleep(350);$("lg").classList.remove("on")}
+async function bad(){$("lr").classList.add("on");await beep(300);await sleep(100);await beep(300);await sleep(300);$("lr").classList.remove("on")}
+const ready=()=>lcd("Smart Attendance","Tap your card");
+function log(t,c){const d=document.createElement("div");d.className=c||"";d.textContent=t;$("log").prepend(d)}
+ready();
+
+let lastUid="",lastAt=0,busy=false;
+$("tap").onclick=async()=>{
+  if(busy)return;
+  const uid=$("uid").value.trim().toUpperCase();if(!uid)return;
+  if(uid===lastUid&&Date.now()-lastAt<3000){log("ignored: same card within 3s cooldown (local debounce)");return}
+  lastUid=uid;lastAt=Date.now();busy=true;
+  const base=$("api").value.trim().replace(/\/$/,"");
+  if(!base){lcd("No server URL","set Backend URL");await bad();ready();busy=false;return}
+  lcd("Checking...",uid);
+  const body={device_id:$("dev").value.trim(),card_uid:uid,timestamp:new Date().toISOString().replace(/\.\d+Z$/,"Z")};
+  log("POST /api/v1/attendance/scan/ "+JSON.stringify(body));
+  try{
+    const r=await fetch(base+"/api/v1/attendance/scan/",{method:"POST",headers:{"Content-Type":"application/json","X-Device-Key":$("key").value.trim()},body:JSON.stringify(body)});
+    const j=await r.json();log("<- "+r.status+" "+JSON.stringify(j),r.ok&&j.success?"ok":"bad");
+    if(r.status===200&&j.success){lcd(j.student,j.status+" "+j.course);await good()}
+    else{lcd(j.status||"ERROR",j.message||"");await bad()}
+  }catch(e){lcd("Server error","No response");log("network error: "+e,"bad");await bad()}
+  await sleep(1500);ready();busy=false;
+};
+</script></body></html>

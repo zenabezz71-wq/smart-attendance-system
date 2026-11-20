@@ -1,0 +1,16 @@
+{% extends "core/base.html" %}{% block body %}
+<h2>Student Portal <small style="color:var(--mut)">{{ report.student }} ({{ report.student_id }})</small></h2>
+<div class="grid">
+<div class="card"><h3>Attendance</h3><div class="big">{{ report.overall.attendance }}%</div></div>
+<div class="card"><h3>Grades</h3><div class="big">{{ report.overall.grades }}%</div></div>
+<div class="card"><h3>Behavior</h3><div class="big">{{ report.overall.behavior }}</div></div>
+<div class="card"><h3>KPI score</h3><div class="big">{{ report.overall.kpi }}</div><span class="pill {{ report.overall.risk }}">{{ report.overall.risk }}</span></div>
+</div>
+<div class="card"><h3>Recommendations</h3><ul>{% for t in tips %}<li>{{ t }}</li>{% endfor %}</ul></div>
+<div class="card"><h3>My courses</h3><table><tr><th>Course</th><th>Attendance</th><th>Min</th><th>Grades</th><th>KPI</th></tr>
+{% for c in report.courses %}<tr><td>{{ c.course_code }} {{ c.course }}</td><td>{{ c.attendance }}%</td><td>{{ c.min_attendance }}%</td><td>{{ c.grades }}%</td><td>{{ c.kpi }} <span class="pill {{ c.risk }}">{{ c.risk }}</span></td></tr>{% endfor %}</table></div>
+<div class="card"><h3>Attendance sheet</h3><table><tr><th>Date</th><th>Course</th><th>Status</th></tr>
+{% for a in attendance %}<tr><td>{{ a.date }}</td><td>{{ a.course.course_code }}</td><td><span class="pill {{ a.status }}">{{ a.status }}</span></td></tr>{% endfor %}</table></div>
+<div class="card"><h3>Grades</h3><table><tr><th>Course</th><th>Type</th><th>Score</th></tr>
+{% for g in grades %}<tr><td>{{ g.course.course_code }}</td><td>{{ g.grade_type }}</td><td>{{ g.score }} / {{ g.max_score }}</td></tr>{% empty %}<tr><td colspan=3>No grades yet.</td></tr>{% endfor %}</table></div>
+{% endblock %}

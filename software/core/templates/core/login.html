@@ -1,0 +1,10 @@
+{% extends "core/base.html" %}{% block body %}
+<div class="card" style="max-width:380px;margin:60px auto">
+<h3>Sign in</h3>
+<form method="post">{% csrf_token %}
+{% if form.errors %}<div class="msg error">Wrong username or password</div>{% endif %}
+<p><input name="username" placeholder="Username" style="width:100%" autofocus></p>
+<p><input name="password" type="password" placeholder="Password" style="width:100%"></p>
+<button>Login</button></form>
+<p style="color:var(--mut);font-size:13px">Demo logins are in the README. <a style="color:var(--acc)" href="/simulator/">Open device simulator</a></p>
+</div>{% endblock %}
