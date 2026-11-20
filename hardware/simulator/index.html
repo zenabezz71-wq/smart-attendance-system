@@ -52,7 +52,7 @@ const $=id=>document.getElementById(id);
 const CARDS=[["Ahmed","A1B2C3D4"],["Sara","B2C3D4E5"],["Omar","C3D4E5F6"],["Mariam","D4E5F6A7"],["Youssef","E5F6A7B8"],["Nour","F6A7B8C9"],["Unknown","00000000"]];
 const params=new URLSearchParams(location.search);
 const sameOrigin=location.pathname.startsWith("/simulator");
-$("api").value=params.get("api")||localStorage.simApi||(sameOrigin?location.origin:"");
+$("api").value=params.get("api")||localStorage.simApi||(sameOrigin?location.origin:"https://smart-attendance-api-3kn6.onrender.com");
 if(params.get("key"))$("key").value=params.get("key");
 $("save").onclick=()=>{localStorage.simApi=$("api").value.trim();$("dash").href=$("api").value.trim().replace(/\/$/,"")+"/dashboard/";$("net").textContent="saved"};
 $("dash").href=($("api").value||"").replace(/\/$/,"")+"/dashboard/";
