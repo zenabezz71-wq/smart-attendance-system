@@ -95,7 +95,7 @@ Absent rows are created by the seed data and by manual correction. A scheduled "
 
 ## Deploy
 
-`render.yaml` defines a free Render web service using SQLite on temporary disk (demo only: data resets on restart or sleep, demo data is re-seeded on start with `SEED_DEMO=1`). For persistent data add PostgreSQL and set `DATABASE_URL`. The simulator is a single static file at `hardware/simulator/index.html`, also served at `/simulator/`.
+`render.yaml` defines a free Render web service using SQLite on temporary disk (demo only: data resets on restart or sleep, demo data is re-seeded on start with `SEED_DEMO=1`). For persistent data add PostgreSQL and set `DATABASE_URL`. The simulator is a single static file at `hardware/simulator/index.html`, also served at `/simulator/`. `/demo/` is a public read-only presentation page that puts the simulator, a student portal and the control dashboard side by side and refreshes live (it polls `/demo/state/`); use it to demo the full flow to a committee without signing in as three roles.
 
 ## Known limits
 

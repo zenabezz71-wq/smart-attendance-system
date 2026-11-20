@@ -156,3 +156,27 @@ class WebTests(SeededCase):
         enr = Enrollment.objects.filter(course__course_code="BIS301").first()
         c.post("/dashboard/record/", {"enrollment": enr.id, "kind": "behavior", "value": "5", "note": "x"})
         self.assertTrue(Behavior.objects.filter(student=enr.student, behavior_points=5).exists())
+
+
+class DemoPageTests(SeededCase):
+    def test_demo_page_public(self):
+        r = self.client.get("/demo/")
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "Control dashboard")
+
+    def test_demo_state_public(self):
+        r = self.client.get("/demo/state/")
+        self.assertEqual(r.status_code, 200)
+        data = r.json()
+        self.assertIn("control", data)
+        self.assertIn("students", data)
+        self.assertEqual(len(data["students"]), 6)
+        self.assertIn("overall", data["students"][0])
+
+    def test_demo_state_reflects_scan(self):
+        Attendance.objects.all().delete()
+        self.assertEqual(scan(APIClient()).status_code, 200)
+        data = self.client.get("/demo/state/").json()
+        self.assertEqual(data["control"]["recent"][0]["student"], "Ahmed Mohamed")
+        sheet = data["students"][0]["sheet"]
+        self.assertEqual(sheet[0]["status"], "PRESENT")

@@ -3,7 +3,8 @@ from pathlib import Path
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, JsonResponse
+from django.core.serializers.json import DjangoJSONEncoder
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
 
@@ -100,3 +101,29 @@ def simulator(request):
     if not path.exists():
         raise Http404("Simulator file not found")
     return HttpResponse(path.read_text(encoding="utf-8"), content_type="text/html; charset=utf-8")
+
+
+def demo(request):
+    """Committee presentation page: device simulator, student portal and control dashboard in one screen.
+
+    Public on purpose: it is a read-only demo view over the seeded demo data, so the committee
+    does not need to sign in as three roles at once. The individual role portals stay login-gated.
+    """
+    return render(request, "core/demo.html")
+
+
+def demo_state(request):
+    """JSON snapshot the demo page polls: the same control summary and per-student reports."""
+    students = []
+    for s in m.Student.objects.select_related("user").order_by("student_id"):
+        rep = analytics.student_report(s)
+        students.append({
+            "id": s.student_id,
+            "name": s.full_name,
+            "overall": rep["overall"],
+            "courses": rep["courses"],
+            "sheet": [{"date": str(a.date), "course": a.course.course_code, "status": a.status,
+                       "time": a.timestamp}
+                      for a in m.Attendance.objects.filter(student=s).select_related("course")[:8]],
+        })
+    return JsonResponse({"control": control_summary(), "students": students}, encoder=DjangoJSONEncoder)

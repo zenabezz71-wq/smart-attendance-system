@@ -25,7 +25,7 @@ python manage.py seed_demo
 python manage.py runserver
 ```
 
-Open http://127.0.0.1:8000/ and log in (demo password `demo12345`, users `admin`, `control`, `devmanager`, `dr_hany`, `dr_laila`, `s1001`). Open http://127.0.0.1:8000/simulator/ to tap virtual cards.
+Open http://127.0.0.1:8000/ and log in (demo password `demo12345`, users `admin`, `control`, `devmanager`, `dr_hany`, `dr_laila`, `s1001`). Open http://127.0.0.1:8000/simulator/ to tap virtual cards. For a committee presentation, http://127.0.0.1:8000/demo/ shows the device simulator, the student portal and the control dashboard together on one live screen (no login needed).
 
 ## How the parts connect
 

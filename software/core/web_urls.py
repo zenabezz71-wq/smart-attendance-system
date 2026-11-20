@@ -10,4 +10,6 @@ urlpatterns = [
     path("dashboard/", v.dashboard, name="dashboard"),
     path("dashboard/record/", v.doctor_record, name="doctor_record"),
     path("simulator/", v.simulator, name="simulator"),
+    path("demo/", v.demo, name="demo"),
+    path("demo/state/", v.demo_state, name="demo_state"),
 ]

@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Live Demo | Smart Attendance</title>
+<style>
+:root{--bg:#0f172a;--card:#1e293b;--mut:#94a3b8;--ok:#22c55e;--warn:#f59e0b;--bad:#ef4444;--acc:#38bdf8}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,Segoe UI,Arial;background:var(--bg);color:#e2e8f0}
+header{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;background:#020617;border-bottom:1px solid #334155}
+header a{color:var(--acc);text-decoration:none;margin-left:14px}
+.wrap{display:grid;gap:14px;grid-template-columns:400px 1fr 1.1fr;padding:14px;align-items:start}
+@media(max-width:1200px){.wrap{grid-template-columns:1fr}}
+.panel h2{margin:2px 0 10px;font-size:17px;color:var(--acc)}
+.panel h2 small{color:var(--mut);font-weight:400;font-size:12px}
+.card{background:var(--card);border-radius:12px;padding:14px;margin-bottom:12px}
+.card h3{margin:0 0 8px;color:var(--acc);font-size:14px}
+.grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(110px,1fr))}
+.big{font-size:26px;font-weight:700}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:6px 7px;text-align:left;border-bottom:1px solid #334155}th{color:var(--mut);font-weight:600}
+.pill{padding:2px 9px;border-radius:99px;font-size:11px;font-weight:600}
+.GOOD,.PRESENT,.on{background:#14532d;color:#86efac}.WARNING,.LATE{background:#78350f;color:#fcd34d}
+.AT_RISK,.ABSENT,.off{background:#7f1d1d;color:#fca5a5}
+iframe{width:100%;height:760px;border:0;border-radius:12px;background:#020617}
+select{padding:7px;border-radius:8px;border:1px solid #475569;background:#0f172a;color:#e2e8f0}
+.live{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--ok);margin-right:6px;animation:p 1.4s infinite}
+@keyframes p{50%{opacity:.25}}
+.flash{animation:f 1.6s}
+@keyframes f{0%{background:#155e75}100%{background:transparent}}
+.mut{color:var(--mut)}
+</style></head><body>
+<header><b>Smart Academic Attendance — Live Demo</b>
+<span><span class="live"></span><span class="mut" id="clock">connecting…</span>
+<a href="/simulator/">Simulator</a><a href="/login/">Login</a></span></header>
+<div class="wrap">
+
+<section class="panel"><h2>1 · Smart device <small>digital twin — tap a card</small></h2>
+<iframe src="/simulator/" title="Device simulator"></iframe>
+</section>
+
+<section class="panel"><h2>2 · Student portal <small id="stSub">updates live after each tap</small></h2>
+<div class="card"><h3>Student <select id="stSel" style="float:right"></select></h3>
+<div class="grid">
+<div><div class="mut">Attendance</div><div class="big" id="sA">–</div></div>
+<div><div class="mut">Grades</div><div class="big" id="sG">–</div></div>
+<div><div class="mut">Behavior</div><div class="big" id="sB">–</div></div>
+<div><div class="mut">KPI</div><div class="big" id="sK">–</div><span class="pill" id="sR"></span></div>
+</div></div>
+<div class="card"><h3>Courses</h3><table><thead><tr><th>Course</th><th>Att.</th><th>Grades</th><th>KPI</th></tr></thead><tbody id="sC"></tbody></table></div>
+<div class="card"><h3>Attendance sheet</h3><table><thead><tr><th>Date</th><th>Course</th><th>Status</th></tr></thead><tbody id="sS"></tbody></table></div>
+</section>
+
+<section class="panel"><h2>3 · Control dashboard <small>live across devices</small></h2>
+<div class="card"><div class="grid">
+<div><div class="mut">Students</div><div class="big" id="cN">–</div></div>
+<div><div class="mut">Scans today</div><div class="big" id="cT">–</div></div>
+<div><div class="mut">Today rate</div><div class="big" id="cR">–</div></div>
+</div></div>
+<div class="card"><h3>Devices</h3><table><thead><tr><th>Device</th><th>Room</th><th>Connection</th></tr></thead><tbody id="cD"></tbody></table></div>
+<div class="card"><h3>Live scans</h3><table><thead><tr><th>Student</th><th>Course</th><th>Status</th><th>Time</th></tr></thead><tbody id="cS"></tbody></table></div>
+<div class="card"><h3>Early warning</h3><table><thead><tr><th>Student</th><th>Att.</th><th>Grades</th><th>KPI</th><th></th></tr></thead><tbody id="cW"></tbody></table></div>
+</section>
+
+</div>
+<script>
+const $=id=>document.getElementById(id);
+let state=null, selected=null, lastScanKey=null, manual=false;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const timeOf=t=>new Date(t).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+
+function renderStudent(){
+  const st=state.students.find(s=>s.id===selected)||state.students[0];
+  if(!st) return;
+  if($("stSel").value!==st.id) $("stSel").value=st.id;
+  $("stSub").textContent=st.name+" ("+st.id+")";
+  $("sA").textContent=st.overall.attendance+"%";
+  $("sG").textContent=st.overall.grades+"%";
+  $("sB").textContent=st.overall.behavior;
+  $("sK").textContent=st.overall.kpi;
+  const r=$("sR"); r.textContent=st.overall.risk; r.className="pill "+st.overall.risk;
+  $("sC").innerHTML=st.courses.map(c=>`<tr><td>${esc(c.course_code)} ${esc(c.course)}</td><td>${c.attendance}%</td><td>${c.grades}%</td><td>${c.kpi} <span class="pill ${c.risk}">${c.risk}</span></td></tr>`).join("");
+  $("sS").innerHTML=st.sheet.map(a=>`<tr class="${a._new?'flash':''}"><td>${a.date}</td><td>${esc(a.course)}</td><td><span class="pill ${a.status}">${a.status}</span></td></tr>`).join("")||`<tr><td colspan=3 class=mut>No scans yet.</td></tr>`;
+}
+
+function renderControl(newKey){
+  const c=state.control;
+  $("cN").textContent=c.students; $("cT").textContent=c.today_scans; $("cR").textContent=c.today_attendance_rate+"%";
+  $("cD").innerHTML=c.devices.map(d=>`<tr><td>${esc(d.device)}</td><td>${esc(d.room)}</td><td><span class="pill ${d.online?'on':'off'}">${d.online?'ONLINE':'OFFLINE'}</span></td></tr>`).join("");
+  $("cS").innerHTML=c.recent.map((r,i)=>{const k=r.student+r.course+r.time;
+    return `<tr class="${k===newKey?'flash':''}"><td>${esc(r.student)}</td><td>${esc(r.course)}</td><td><span class="pill ${r.status}">${r.status}</span></td><td>${timeOf(r.time)}</td></tr>`;}).join("")
+    ||`<tr><td colspan=4 class=mut>No scans yet — tap a card on the device.</td></tr>`;
+  $("cW").innerHTML=c.at_risk.map(s=>`<tr><td>${esc(s.student)}</td><td>${s.attendance}%</td><td>${s.grades}%</td><td>${s.kpi}</td><td><span class="pill ${s.risk}">${s.risk}</span></td></tr>`).join("")
+    ||`<tr><td colspan=5 class=mut>Nobody at risk.</td></tr>`;
+}
+
+async function poll(){
+  try{
+    const r=await fetch("/demo/state/"); if(!r.ok) throw 0;
+    state=await r.json();
+    if(!$("stSel").options.length){
+      $("stSel").innerHTML=state.students.map(s=>`<option value="${esc(s.id)}">${esc(s.name)}</option>`).join("");
+      selected=state.students[0]&&state.students[0].id;
+    }
+    const top=state.control.recent[0], key=top?top.student+top.course+top.time:null;
+    const fresh=key&&key!==lastScanKey;
+    if(fresh){ // a new tap: clear old flags, mark the new row, follow the student
+      state.students.forEach(s=>s.sheet.forEach(a=>a._new=false));
+      const st=state.students.find(s=>s.name===top.student);
+      if(st){ if(st.sheet.length) st.sheet[0]._new=true; if(!manual||true){selected=st.id; manual=false;} }
+    }
+    lastScanKey=key||lastScanKey;
+    renderStudent(); renderControl(fresh?key:null);
+    $("clock").textContent="live · updated "+new Date().toLocaleTimeString();
+  }catch(e){ $("clock").textContent="reconnecting…"; }
+}
+$("stSel").addEventListener("change",e=>{selected=e.target.value; manual=true; renderStudent();});
+poll(); setInterval(poll,2000);
+</script>
+</body></html>
