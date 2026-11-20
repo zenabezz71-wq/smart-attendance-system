@@ -11,7 +11,7 @@ software/
   config/             Django settings and URLs
   core/               Models (13 tables + auth), REST API, scan endpoint, analytics, dashboards, seed, tests
   README.md           Setup, API, roles, formulas
-render.yaml           One-click deploy blueprint (web service + PostgreSQL)
+render.yaml           Render blueprint (free demo web service, SQLite)
 docker-compose.yml    Local PostgreSQL + backend
 ```
 

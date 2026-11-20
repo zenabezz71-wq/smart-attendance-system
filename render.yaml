@@ -1,3 +1,6 @@
+# Demo deploy on Render's free plan. It uses SQLite on the service's temporary disk, so data
+# resets when the service restarts or sleeps (seed_demo reloads the demo data each start).
+# For real use, add a PostgreSQL database and set DATABASE_URL (see software/README.md).
 services:
   - type: web
     name: smart-attendance-api
@@ -6,14 +9,11 @@ services:
     buildCommand: pip install -r software/requirements.txt && cd software && python manage.py collectstatic --noinput
     startCommand: cd software && python manage.py migrate --noinput && (if [ "$SEED_DEMO" = "1" ]; then python manage.py seed_demo; fi) && gunicorn config.wsgi --bind 0.0.0.0:$PORT
     envVars:
-      - key: DATABASE_URL
-        fromDatabase: {name: smart-attendance-db, property: connectionString}
+      - key: PYTHON_VERSION
+        value: "3.12.3"
       - key: SECRET_KEY
         generateValue: true
       - key: DEBUG
         value: "0"
       - key: SEED_DEMO
         value: "1"
-databases:
-  - name: smart-attendance-db
-    plan: free

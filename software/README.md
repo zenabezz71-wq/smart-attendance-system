@@ -95,7 +95,7 @@ Absent rows are created by the seed data and by manual correction. A scheduled "
 
 ## Deploy
 
-`render.yaml` defines a Render web service and a PostgreSQL database. The build runs migrations; set `SEED_DEMO=1` on the first deploy to load demo data. The simulator is a single static file at `hardware/simulator/index.html`, also served at `/simulator/`.
+`render.yaml` defines a free Render web service using SQLite on temporary disk (demo only: data resets on restart or sleep, demo data is re-seeded on start with `SEED_DEMO=1`). For persistent data add PostgreSQL and set `DATABASE_URL`. The simulator is a single static file at `hardware/simulator/index.html`, also served at `/simulator/`.
 
 ## Known limits
 
